@@ -131,11 +131,11 @@ class SlackLogger(object):
         self.post_to_slack(message, None)
 
     def log_deploy_progress(self, service, task_definition):
+        message, attachments = self.get_deploy_progress_payload(service, task_definition)
         if self.slack is not None:
-            message, attachments = self.get_deploy_progress_payload(service, task_definition)
             self.post_to_slack(message, attachments)
         else:
-            print('Rendering Deploy Progress in Slack Webhook Mode is Disabled! Need support for posting attachments!')
+            print('Posting Deploy Progress to Slack Channel in Webhook Mode - Yet to be implemented! Waiting for Deploy to Complete!')
 
     def log_deploy_finish(self, service, task_definition):
         message, attachments = self.get_deploy_finish_payload(service, task_definition)
