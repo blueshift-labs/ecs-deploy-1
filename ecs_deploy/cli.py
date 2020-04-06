@@ -37,7 +37,7 @@ def get_client(access_key_id, secret_access_key, region, profile):
 @click.pass_context
 def deploy_many(ctx, cluster, services, **kwargs):
     slist = services.split(',')
-    click.echo(f'Deploying to cluster={cluster} services={slist} args={kwargs}')
+    click.secho(f'Deploying to cluster={cluster} services={slist} args={kwargs}')
     num_worker_threads = kwargs['worker_count']
     del kwargs['worker_count']
 
