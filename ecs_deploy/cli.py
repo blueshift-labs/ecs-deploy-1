@@ -36,6 +36,11 @@ def get_client(access_key_id, secret_access_key, region, profile):
 @click.option('--worker_count', required=False, default=16, type=int, help='Number of worker threads to run')
 @click.pass_context
 def deploy_many(ctx, cluster, services, **kwargs):
+    """
+    Redeploy/modify many services in parallel.
+    Services must be of the same cluster.
+    This command calls the `deploy` command for every service in the list.
+    """
     slist = services.split(',')
     click.secho(f'Deploying to cluster={cluster} services={slist} args={kwargs}')
     num_worker_threads = kwargs['worker_count']
@@ -388,6 +393,7 @@ def inspect_errors(service, failure_message, ignore_warnings, since, timeout):
 
 
 ecs.add_command(deploy)
+ecs.add_command(deploy_many)
 ecs.add_command(scale)
 
 if __name__ == '__main__':  # pragma: no cover
