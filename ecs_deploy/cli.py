@@ -3,6 +3,9 @@ from __future__ import print_function, absolute_import
 from os import getenv
 from time import sleep
 
+import queue
+import threading
+
 import copy
 import click
 import getpass
@@ -23,6 +26,52 @@ def ecs():  # pragma: no cover
 
 def get_client(access_key_id, secret_access_key, region, profile):
     return EcsClient(access_key_id, secret_access_key, region, profile)
+
+
+@click.command()
+@click.option('--cluster', required=True)
+@click.option('--services', required=True, help='Comma separated list of services')
+@click.option('-i', '--image', type=(str, str), multiple=True, help='Overwrites the image for a container: <container> <image>')
+@click.option('--timeout', required=False, default=900, type=int, help='Amount of seconds to wait for deployment before command fails (default: 900)')
+@click.option('--worker_count', required=False, default=16, type=int, help='Number of worker threads to run')
+@click.pass_context
+def deploy_many(ctx, cluster, services, **kwargs):
+    slist = services.split(',')
+    click.echo(f'Deploying to cluster={cluster} services={slist} args={kwargs}')
+    num_worker_threads = kwargs['worker_count']
+    del kwargs['worker_count']
+
+    def worker(q):
+        tid = threading.get_ident()
+        while True:
+            item = q.get()
+            if item is None:
+                break
+            cluster, service = item
+            service = service.strip()
+            click.secho(f'Starting deploy cluster={cluster} service={service} TID={tid}')
+            ctx.invoke(deploy, cluster=cluster, service=service, **kwargs)
+            click.secho(f'Done deploy cluster={cluster} service={service} TID={tid}')
+            q.task_done()
+
+    q = queue.Queue()
+    threads = []
+    for i in range(num_worker_threads):
+        t = threading.Thread(target=worker, args=(q,))
+        t.start()
+        threads.append(t)
+
+    for service in slist:
+        q.put((cluster, service))
+
+    # block until all tasks are done
+    q.join()
+
+    # stop workers
+    for i in range(num_worker_threads):
+        q.put(None)
+    for t in threads:
+        t.join()
 
 
 @click.command()
