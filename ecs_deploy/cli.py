@@ -53,14 +53,14 @@ def deploy_many(ctx, cluster, services, **kwargs):
                 break
             cluster, service = item
             service = service.strip()
-            click.secho(f'Starting deploy cluster={cluster} service={service} TID={tid}')
+            click.secho(f'Starting deploy cluster={cluster} service={service} tid={tid}')
             try:
                 ctx.invoke(deploy, cluster=cluster, service=service, **kwargs)
             except Exception as e:
-                click.secho(e)
+                click.secho(f'Got error `{e}` for {service} tid={tid}')
             finally:
                 q.task_done()
-            click.secho(f'Done deploy cluster={cluster} service={service} TID={tid}')
+            click.secho(f'Done deploy cluster={cluster} service={service} tid={tid}')
 
     q = queue.Queue()
     threads = []
