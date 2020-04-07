@@ -46,8 +46,7 @@ def deploy_many(ctx, cluster, services, **kwargs):
     num_worker_threads = kwargs['worker_count']
     del kwargs['worker_count']
 
-    def worker(q):
-        tid = threading.get_ident()
+    def worker(q, tid):
         while True:
             item = q.get()
             if item is None:
@@ -55,14 +54,18 @@ def deploy_many(ctx, cluster, services, **kwargs):
             cluster, service = item
             service = service.strip()
             click.secho(f'Starting deploy cluster={cluster} service={service} TID={tid}')
-            ctx.invoke(deploy, cluster=cluster, service=service, **kwargs)
+            try:
+                ctx.invoke(deploy, cluster=cluster, service=service, **kwargs)
+            except Exception as e:
+                click.secho(e)
+            finally:
+                q.task_done()
             click.secho(f'Done deploy cluster={cluster} service={service} TID={tid}')
-            q.task_done()
 
     q = queue.Queue()
     threads = []
     for i in range(num_worker_threads):
-        t = threading.Thread(target=worker, args=(q,))
+        t = threading.Thread(target=worker, args=(q, i))
         t.start()
         threads.append(t)
 
