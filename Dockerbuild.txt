@@ -1,0 +1,2 @@
+docker build -t staging-docker-registry.bsftstaging.vpc/ecs_deploy:multithreaded-vXX .
+docker push staging-docker-registry.bsftstaging.vpc/ecs_deploy:multithreaded-vXX
