@@ -131,6 +131,12 @@ class SlackLogger(object):
         self.post_to_slack(message, None)
 
     def log_deploy_progress(self, service, task_definition):
+        primary = [dep for dep in service['deployments'] if dep['status']=='PRIMARY'][0]
+        des = primary['desiredCount']
+        if des <= 0:
+            print('Desired Count of this service is Zero! Skipping Progress Bar Message Generation!')
+            return
+
         message, attachments = self.get_deploy_progress_payload(service, task_definition)
         if self.slack is not None:
             self.post_to_slack(message, attachments)
