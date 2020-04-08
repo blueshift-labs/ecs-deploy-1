@@ -1,2 +1,43 @@
-docker build -t staging-docker-registry.bsftstaging.vpc/ecs_deploy:multithreaded-vXX .
-docker push staging-docker-registry.bsftstaging.vpc/ecs_deploy:multithreaded-vXX
+HOW TO BUILD & PUSH DOCKER TAG
+------------------------------
+ssh ci.blueshift.vpc # Ssh to production jenkins
+git clone https://github.com/blueshift-labs/ecs-deploy-1.git # Clone repository
+cd ecs-deploy-1/
+git checkout develop # Checkout required branch
+
+# Build docker image
+docker build -t ecs_deploy:20.4.1 .
+
+# Tag & push to production registry
+docker tag ecs_deploy:20.4.1 docker-registry.blueshift.vpc/ecs_deploy:20.4.1
+docker push docker-registry.blueshift.vpc/ecs_deploy:20.4.1
+
+# Tag & push to staging registry
+docker tag ecs_deploy:20.4.1 staging-docker-registry.bsftstaging.vpc/ecs_deploy:20.4.1
+docker push staging-docker-registry.bsftstaging.vpc/ecs_deploy:20.4.1
+
+# Test that tag works
+
+# docker run docker-registry.blueshift.vpc/ecs_deploy:20.4.1 ecs
+Usage: ecs [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  deploy       Redeploy or modify a service.
+  deploy-many  Redeploy/modify many services in parallel.
+  scale        Scale a service up or down.
+
+# docker run staging-docker-registry.bsftstaging.vpc/ecs_deploy:20.4.1 ecs
+Usage: ecs [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  deploy       Redeploy or modify a service.
+  deploy-many  Redeploy/modify many services in parallel.
+  scale        Scale a service up or down.
