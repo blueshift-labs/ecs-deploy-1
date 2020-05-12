@@ -83,7 +83,7 @@ class SlackLogger(object):
         #import pdb;pdb.set_trace()
         service_link = self.service_url(service.cluster, service.name)
         cluster_link = self.cluster_url(service.cluster)
-        return "Deploying service <%s|%s> on cluster <%s|%s> \nImage: %s" % (service_link, service.name, cluster_link, service.cluster, ",".join( [c['image'] for c in task_definition.containers]) )
+        return "Deploying service <%s|%s> / <%s|%s> \n_Image: %s_" % (cluster_link, service.cluster, service_link, service.name, ",".join( [c['image'] for c in task_definition.containers]) )
 
     def get_deploy_progress_payload(self, service, task_definition):
         cluster_link = self.cluster_url(service.cluster)
@@ -110,7 +110,7 @@ class SlackLogger(object):
             })
 
         messg = self.get_deploy_start_payload(service, task_definition)
-        return messg, attachments
+        return '', attachments
 
     def get_deploy_finish_payload(self, service, task_definition):
         primary = [dep for dep in service['deployments'] if dep['status']=='PRIMARY'][0]
@@ -128,7 +128,7 @@ class SlackLogger(object):
         service_link = self.service_url(service.cluster, service.name)
         cluster_link = self.cluster_url(service.cluster)
 
-        messg = "Deploy finished for service <%s|%s> on cluster <%s|%s>\nImage: %s" % (service_link, service.name, cluster_link, service.cluster, ",".join( [c['image'] for c in task_definition.containers]))
+        messg = "Deploy finished: <%s|%s> / <%s|%s>\n_Image: %s_" % (cluster_link, service.cluster, service_link, service.name, , ",".join( [c['image'] for c in task_definition.containers]))
         return messg, attachments
 
     def log_deploy_start(self, service, task_definition):
