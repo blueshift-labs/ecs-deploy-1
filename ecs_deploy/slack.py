@@ -86,12 +86,14 @@ class SlackLogger(object):
         return "Deploying service <%s|%s> on cluster <%s|%s> \nImage: %s" % (service_link, service.name, cluster_link, service.cluster, ",".join( [c['image'] for c in task_definition.containers]) )
 
     def get_deploy_progress_payload(self, service, task_definition):
+        cluster_link = self.cluster_url(service.cluster)
+        service_link = self.service_url(service.cluster, service.name)
         primary = [dep for dep in service['deployments'] if dep['status']=='PRIMARY'][0]
         run = primary['runningCount']
         pend = primary['pendingCount']
         des = primary['desiredCount']
         primary_message = {
-        "title": "PRIMARY",
+        "title": f'PRIMARY {cluster_link} / {service_link}',
         "text": self.progress_bar(run, pend, des) + "\tRunning: %s Pending: %s  Desired: %s" % (run, pend, des)
         }
         attachments = [primary_message]
