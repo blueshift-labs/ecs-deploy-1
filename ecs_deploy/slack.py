@@ -93,7 +93,7 @@ class SlackLogger(object):
         pend = primary['pendingCount']
         des = primary['desiredCount']
         primary_message = {
-        "title": f'PRIMARY {cluster_link} / {service_link}',
+        "title": f'PRIMARY {service.cluster} / {service.name}',
         "text": self.progress_bar(run, pend, des) + "\tRunning: %s Pending: %s  Desired: %s" % (run, pend, des)
         }
         attachments = [primary_message]
