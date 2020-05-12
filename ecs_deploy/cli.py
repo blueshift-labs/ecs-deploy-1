@@ -5,6 +5,7 @@ from time import sleep
 
 import queue
 import threading
+import traceback
 
 import copy
 import click
@@ -57,7 +58,8 @@ def deploy_many(ctx, cluster, services, **kwargs):
             try:
                 ctx.invoke(deploy, cluster=cluster, service=service, **kwargs)
             except Exception as e:
-                click.secho(f'Got error `{e}` for {service} tid={tid}')
+                tb = traceback.format_exc()
+                click.secho(f'Got error `{e}` for {service} tid={tid} \n {tb}')
             finally:
                 q.task_done()
             click.secho(f'Done deploy cluster={cluster} service={service} tid={tid}')
