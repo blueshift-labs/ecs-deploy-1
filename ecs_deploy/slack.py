@@ -128,7 +128,7 @@ class SlackLogger(object):
         service_link = self.service_url(service.cluster, service.name)
         cluster_link = self.cluster_url(service.cluster)
 
-        messg = "Deploy finished: <%s|%s> / <%s|%s>\n_Image: %s_" % (cluster_link, service.cluster, service_link, service.name, , ",".join( [c['image'] for c in task_definition.containers]))
+        messg = "Deploy finished: <%s|%s> / <%s|%s>\n_Image: %s_" % (cluster_link, service.cluster, service_link, service.name, ",".join( [c['image'] for c in task_definition.containers]))
         return messg, attachments
 
     def log_deploy_start(self, service, task_definition):
