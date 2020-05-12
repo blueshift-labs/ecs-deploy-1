@@ -215,7 +215,7 @@ def wait_for_finish(action, timeout, title, success_message, failure_message,
     service = action.get_service()
     inspected_until = None
 
-    chat_update = SLACK_LOGGER.log_deploy_progress(service, task_definition)
+    chat_update = SLACK_LOGGER.log_deploy_progress(service, task_definition, None)
     while waiting and datetime.now() < waiting_timeout:
         click.secho('.', nl=False)
         service = action.get_service()
