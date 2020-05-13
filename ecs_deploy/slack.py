@@ -50,21 +50,24 @@ class SlackLogger(object):
             self.slack_webhook_endpoint = None
 
         self.channel = getenv('SLACK_CHANNEL', "test")
-        self.first_post = None
 
     def progress_bar(self, running, pending, desired):
         progress = round(float(running) * 100 / float(desired) / 5)
         pending = round(float(pending) * 100 / float(desired) / 5)
         return (progress * chr(9608)) + (pending * chr(9618)) + ((20 - progress - pending) * chr(9617))
 
-    def post_to_slack(self, message, attachments):
+    def post_to_slack(self, message, attachments, chat_update=None):
+        '''
+            If chat_update is a chat object, this function will update that object
+            with the new text. Callers interested in updating chats can save the 
+            return value and send it in chat_update the next time.
+        '''
         if self.slack is not None:
-            if self.first_post == None:
-                res = self.slack.chat.post_message(self.channel, text=message, attachments=attachments, as_user=True)
-                self.first_post = res.body
+            if chat_update is not None:
+                res = self.slack.chat.update(chat_update['channel'], text=message, attachments=attachments, as_user=True, ts=chat_update['ts'])
             else:
-                res = self.slack.chat.update(self.first_post['channel'], text=message, attachments=attachments, as_user=True, ts=self.first_post['ts'])
-                res.body
+                res = self.slack.chat.post_message(self.channel, text=message, attachments=attachments, as_user=True)
+            return res.body 
         elif self.slack_webhook_endpoint is not None:
             self.slack_webhook_endpoint.post_to_slack(message, attachments)
         else:
@@ -80,15 +83,17 @@ class SlackLogger(object):
         #import pdb;pdb.set_trace()
         service_link = self.service_url(service.cluster, service.name)
         cluster_link = self.cluster_url(service.cluster)
-        return "Deploying service <%s|%s> on cluster <%s|%s> \nImage: %s" % (service_link, service.name, cluster_link, service.cluster, ",".join( [c['image'] for c in task_definition.containers]) )
+        return "Deploying service <%s|%s> / <%s|%s> \n_Image: %s_" % (cluster_link, service.cluster, service_link, service.name, ",".join( [c['image'] for c in task_definition.containers]) )
 
     def get_deploy_progress_payload(self, service, task_definition):
+        cluster_link = self.cluster_url(service.cluster)
+        service_link = self.service_url(service.cluster, service.name)
         primary = [dep for dep in service['deployments'] if dep['status']=='PRIMARY'][0]
         run = primary['runningCount']
         pend = primary['pendingCount']
         des = primary['desiredCount']
         primary_message = {
-        "title": "PRIMARY",
+        "title": f'PRIMARY <{cluster_link}|{service.cluster}> / <{service_link}|{service.name}>',
         "text": self.progress_bar(run, pend, des) + "\tRunning: %s Pending: %s  Desired: %s" % (run, pend, des)
         }
         attachments = [primary_message]
@@ -105,7 +110,7 @@ class SlackLogger(object):
             })
 
         messg = self.get_deploy_start_payload(service, task_definition)
-        return messg, attachments
+        return '', attachments
 
     def get_deploy_finish_payload(self, service, task_definition):
         primary = [dep for dep in service['deployments'] if dep['status']=='PRIMARY'][0]
@@ -123,14 +128,14 @@ class SlackLogger(object):
         service_link = self.service_url(service.cluster, service.name)
         cluster_link = self.cluster_url(service.cluster)
 
-        messg = "Deploy finished for service <%s|%s> on cluster <%s|%s>\nImage: %s" % (service_link, service.name, cluster_link, service.cluster, ",".join( [c['image'] for c in task_definition.containers]))
+        messg = "Deploy finished: <%s|%s> / <%s|%s>\n_Image: %s_" % (cluster_link, service.cluster, service_link, service.name, ",".join( [c['image'] for c in task_definition.containers]))
         return messg, attachments
 
     def log_deploy_start(self, service, task_definition):
         message = self.get_deploy_start_payload(service, task_definition)
         self.post_to_slack(message, None)
 
-    def log_deploy_progress(self, service, task_definition):
+    def log_deploy_progress(self, service, task_definition, chat_update):
         primary = [dep for dep in service['deployments'] if dep['status']=='PRIMARY'][0]
         des = primary['desiredCount']
         if des <= 0:
@@ -139,7 +144,7 @@ class SlackLogger(object):
 
         message, attachments = self.get_deploy_progress_payload(service, task_definition)
         if self.slack is not None:
-            self.post_to_slack(message, attachments)
+            return self.post_to_slack(message, attachments, chat_update)
         else:
             print('Posting Deploy Progress to Slack Channel in Webhook Mode - Yet to be implemented! Waiting for Deploy to Complete!')
 

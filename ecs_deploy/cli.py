@@ -5,6 +5,9 @@ from time import sleep
 
 import queue
 import threading
+import traceback
+import time
+import random
 
 import copy
 import click
@@ -47,6 +50,8 @@ def deploy_many(ctx, cluster, services, **kwargs):
     del kwargs['worker_count']
 
     def worker(q, tid):
+        # Before starting, sleep a random duration to avoid hitting rate limits
+        time.sleep(random.randint(1,15))
         while True:
             item = q.get()
             if item is None:
@@ -57,7 +62,8 @@ def deploy_many(ctx, cluster, services, **kwargs):
             try:
                 ctx.invoke(deploy, cluster=cluster, service=service, **kwargs)
             except Exception as e:
-                click.secho(f'Got error `{e}` for {service} tid={tid}')
+                tb = traceback.format_exc()
+                click.secho(f'Got error `{e}` for {service} tid={tid} \n {tb}')
             finally:
                 q.task_done()
             click.secho(f'Done deploy cluster={cluster} service={service} tid={tid}')
@@ -213,6 +219,7 @@ def wait_for_finish(action, timeout, title, success_message, failure_message,
     service = action.get_service()
     inspected_until = None
 
+    chat_update = SLACK_LOGGER.log_deploy_progress(service, task_definition, None)
     while waiting and datetime.now() < waiting_timeout:
         click.secho('.', nl=False)
         service = action.get_service()
@@ -224,10 +231,10 @@ def wait_for_finish(action, timeout, title, success_message, failure_message,
             timeout=False
         )
         waiting = not action.is_deployed(service)
-        SLACK_LOGGER.log_deploy_progress(service, task_definition)
+        chat_update = SLACK_LOGGER.log_deploy_progress(service, task_definition, chat_update)
 
         if waiting:
-            sleep(10)
+            sleep(30)
 
     inspect_errors(
         service=service,
