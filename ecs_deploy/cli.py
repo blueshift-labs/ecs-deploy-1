@@ -6,6 +6,8 @@ from time import sleep
 import queue
 import threading
 import traceback
+import time
+import random
 
 import copy
 import click
@@ -48,6 +50,8 @@ def deploy_many(ctx, cluster, services, **kwargs):
     del kwargs['worker_count']
 
     def worker(q, tid):
+        # Before starting, sleep a random duration to avoid hitting rate limits
+        time.sleep(random.randint(1,15))
         while True:
             item = q.get()
             if item is None:
@@ -230,7 +234,7 @@ def wait_for_finish(action, timeout, title, success_message, failure_message,
         chat_update = SLACK_LOGGER.log_deploy_progress(service, task_definition, chat_update)
 
         if waiting:
-            sleep(10)
+            sleep(30)
 
     inspect_errors(
         service=service,
