@@ -4,17 +4,17 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-TAG=$1
+TAG=ecs_deploy:$1
 
 # Build docker image
-docker build -t ecs_deploy:$TAG .
+docker build -t $TAG .
 
 # Tag & push to production registry
-echo "----------- Pushing to prod -----------"
-docker tag ecs_deploy:$TAG docker-registry.blueshift.vpc/ecs_deploy:$TAG
-docker push docker-registry.blueshift.vpc/ecs_deploy:$TAG
+echo "----------- Pushing to prod -> $TAG"
+docker tag $TAG docker-registry.blueshift.vpc/$TAG
+docker push docker-registry.blueshift.vpc/$TAG
 
 # Tag & push to staging registry
-echo "----------- Pushing to staging -----------"
-docker tag ecs_deploy:$TAG staging-docker-registry.bsftstaging.vpc/ecs_deploy:$TAG
-docker push staging-docker-registry.bsftstaging.vpc/ecs_deploy:$TAG
+echo "----------- Pushing to staging -> $TAG"
+docker tag $TAG staging-docker-registry.bsftstaging.vpc/$TAG
+docker push staging-docker-registry.bsftstaging.vpc/$TAG
