@@ -36,6 +36,7 @@ class SlackWebhookLogger:
 class SlackLogger(object):
 
     def __init__(self):
+        self.muted = getenv('SLACK_MUTED', False)
         if getenv('SLACK_TOKEN', None) is not None:
             print('Initializing Slack Token based client')
             self.slack = Slacker(getenv('SLACK_TOKEN'))
@@ -62,6 +63,8 @@ class SlackLogger(object):
             with the new text. Callers interested in updating chats can save the 
             return value and send it in chat_update the next time.
         '''
+        if self.muted:
+            return
         if self.slack is not None:
             if chat_update is not None:
                 res = self.slack.chat.update(chat_update['channel'], text=message, attachments=attachments, as_user=True, ts=chat_update['ts'])
