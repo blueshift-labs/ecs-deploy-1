@@ -7,6 +7,9 @@ fi
 TAG=ecs_deploy:$1
 LATEST=ecs_deploy:latest
 
+# Inject last commit id in artifact
+echo "VERSION = '$TAG-`git rev-parse HEAD | cut -c -7`'" > ecs_deploy/__init__.py
+
 # Build docker image
 docker build -t $TAG .
 
