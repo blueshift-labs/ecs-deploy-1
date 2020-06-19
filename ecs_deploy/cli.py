@@ -37,6 +37,7 @@ def get_client(access_key_id, secret_access_key, region, profile):
 @click.option('-i', '--image', type=(str, str), multiple=True, help='Overwrites the image for a container: <container> <image>')
 @click.option('--timeout', required=False, default=900, type=int, help='Amount of seconds to wait for deployment before command fails (default: 900)')
 @click.option('--worker_count', required=False, default=16, type=int, help='Number of worker threads to run')
+@click.option('--ignore-warnings', is_flag=True, help='Do not fail deployment on warnings (port already in use or insufficient memory/CPU)')
 @click.pass_context
 def deploy_many(ctx, cluster, services, **kwargs):
     """
