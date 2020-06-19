@@ -156,7 +156,7 @@ def deploy(cluster, service, tag, image, command, env, role, task, region, acces
 
         except TaskPlacementError as e:
             if rollback:
-                click.secho('%s\n' % str(e), fg='red', err=True)
+                click.secho('%s\n' % str(e), fg='red')
                 rollback_task_definition(deployment, td, new_td)
                 exit(1)
             else:
@@ -165,7 +165,7 @@ def deploy(cluster, service, tag, image, command, env, role, task, region, acces
         record_deployment(tag, newrelic_apikey, newrelic_appid, comment, user)
 
     except (EcsError, SlackException) as e:
-        click.secho('%s\n' % str(e), fg='red', err=True)
+        click.secho('%s\n' % str(e), fg='red')
         exit(1)
 
 
@@ -207,7 +207,7 @@ def scale(cluster, service, desired_count, access_key_id, secret_access_key, reg
         )
 
     except EcsError as e:
-        click.secho('%s\n' % str(e), fg='red', err=True)
+        click.secho('%s\n' % str(e), fg='red')
         exit(1)
 
 
@@ -327,8 +327,7 @@ def rollback_task_definition(deployment, old, new, timeout=900):
     )
     click.secho(
         'Deployment failed, but service has been rolled back to previous '
-        'task definition: %s\n' % old.family_revision, fg='yellow', err=True
-    )
+        'task definition: %s\n' % old.family_revision, fg='yellow')
 
 
 def record_deployment(revision, api_key, app_id, comment, user):
@@ -343,8 +342,7 @@ def record_deployment(revision, api_key, app_id, comment, user):
     #deployment = SlackLogger()
     #deployment.deploy(revision, '', comment)
 
-    click.secho('\nDone\n', fg='green')
-
+    click.secho('\nDone\n')
     return True
 
 
@@ -366,29 +364,17 @@ def inspect_errors(service, failure_message, ignore_warnings, since, timeout):
         click.secho('')
         if ignore_warnings:
             last_error_timestamp = timestamp
-            click.secho(
-                text='%s\nWARNING: %s' % (timestamp, message),
-                fg='yellow',
-                err=False
-            )
+            click.secho('%s\nWARNING: %s' % (timestamp, message))
             click.secho('Continuing.', nl=False)
         else:
-            click.secho(
-                text='%s\nERROR: %s\n' % (timestamp, message),
-                fg='red',
-                err=True
-            )
+            click.secho('%s\nERROR: %s\n' % (timestamp, message))
             error = True
 
     if service.older_errors:
         click.secho('')
-        click.secho('Older errors', fg='yellow', err=True)
+        click.secho('Older errors')
         for timestamp in service.older_errors:
-            click.secho(
-                text='%s\n%s\n' % (timestamp, service.older_errors[timestamp]),
-                fg='yellow',
-                err=True
-            )
+            click.secho('%s\n%s\n' % (timestamp, service.older_errors[timestamp]))
 
     if timeout:
         error = True
