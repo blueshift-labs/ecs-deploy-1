@@ -78,7 +78,9 @@ def deploy_many(ctx, cluster, services, **kwargs):
         threads.append(t)
 
     for service in slist:
-        q.put((cluster, service))
+        service = service.strip()
+        if service:
+            q.put((cluster, service))
 
     # block until all tasks are done
     q.join()
